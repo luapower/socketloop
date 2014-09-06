@@ -3,7 +3,7 @@ project: socketloop
 tagline: TCP sockets with coroutines
 ---
 
-## `local socketloop = require'socketloop'`
+## `local loop = require'socketloop'`
 
 A socket loop enables coroutine-based asynchronous I/O programming model for
 [TCP sockets][TCP socket]. The concept is similar to [Copas], the API and the
@@ -12,8 +12,6 @@ implementation are different. Supports both symmetric and asymmetric coroutines.
 [Copas]: http://keplerproject.github.com/copas/
 
 ----------------------------------------- ----------------------------------------
-__basic__
-`socketloop([coro]) -> loop`					make a socket loop
 `loop.wrap(socket) -> asocket`				wrap a TCP socket to an async socket
 `loop.connect(addr,port) -> asocket`		make an async TCP connection
 `loop.newthread(handler, ...)`				create a thread for one connection
@@ -21,14 +19,8 @@ __basic__
 `loop.start([timeout])`							start the loop
 `loop.stop()`										stop the loop (if started)
 `loop.dispatch([timeout]) -> true|false`	dispatch pending reads and writes
+`loop.coro -> loop`								[coro]-based loop
 ----------------------------------------- ----------------------------------------
-
-## `socketloop([coro]) -> loop`
-
-Make a new socket loop object. Since we're using select(), it only makes
-sense to have one loop per CPU thread / Lua state. The coro arg is the
-[coro] module. If given, the created loop dispatches to
-[symmetric coroutines][coro] instead of Lua coroutines.
 
 ## `loop.wrap(socket) -> asocket`
 
@@ -50,8 +42,7 @@ Make a TCP connection and return an async socket.
 
 ## `loop.newthread(handler, args)`
 
-Create and resume a coroutine (or coro thread, depending on how the loop
-was created).
+Create and resume a coroutine (or coro thread, if it's a coro-based loop).
 
 ## `loop.newserver(host, port, handler)`
 
@@ -72,3 +63,34 @@ Stop the dispatch loop (if started).
 
 Dispatch currently pending reads and writes to their respective coroutines.
 
+## `loop = require'socketloop'.coro`
+
+An alternative loop that dispatches to [symmetric coroutines][coro] instead
+of Lua coroutines.
+
+## Example
+
+~~~{.lua}
+local loop = require'socketloop'
+local http = require'socket.http'
+
+local function getpage(url)
+	local t = {}
+	local ok, code, headers = http.request{
+		url = url,
+		sink = ltn12.sink.table(t),
+		create = function()
+			return loop.wrap(socket.try(socket.tcp()))
+		end,
+	}
+	assert(ok, code)
+	return table.concat(t), headers, code
+end
+
+loop.newthread(function()
+	local body = getpage'http://google.com/'
+	print('got ' .. #body .. ' bytes')
+end)
+
+loop.start()
+~~~

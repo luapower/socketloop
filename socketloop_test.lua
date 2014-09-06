@@ -4,7 +4,8 @@ lanes.configure()
 local linda = lanes.linda()
 
 local function reverse_echo_server(port, coro)
-	local loop = require('socketloop')(coro)
+	local loop = require'socketloop'
+	if coro then loop = loop.coro end
 	local hcount = 0
 	local stop_loop
 	local function handler(skt)
@@ -31,7 +32,8 @@ local function reverse_echo_server(port, coro)
 end
 
 local function client_multi_conn(server_port, coro)
-	local loop = require('socketloop')(coro)
+	local loop = require'socketloop'
+	if coro then loop = loop.coro end
 	local function client()
 		local skt = assert(loop.connect('localhost', server_port))
 		local function say(s)
@@ -46,14 +48,15 @@ local function client_multi_conn(server_port, coro)
 		end
 		skt:send'close\n'
 	end
-	for i=1,9 do
+	for i=1,5 do
 		loop.newthread(client)
 	end
 	loop.start(1)
 end
 
 local function stop_conn(server_port, coro)
-	local loop = require('socketloop')(coro)
+	local loop = require'socketloop'
+	if coro then loop = loop.coro end
 	loop.newthread(function()
 		local skt = assert(loop.connect('localhost', server_port))
 		assert(skt:send'stop\n')
@@ -95,5 +98,5 @@ local function test(coro)
 end
 
 test()
-test(require'coro')
+test(true)
 

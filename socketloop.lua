@@ -188,6 +188,13 @@ local function new(coro)
 	return loop
 end
 
+local loop = new()
+
+glue.autoload(loop, {coro = function()
+	local coro = require'coro'
+	loop.coro = new(coro)
+end})
+
 if not ... then require'socketloop_test' end
 
-return new
+return loop
