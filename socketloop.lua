@@ -117,11 +117,6 @@ local function new(coro)
 		else
 			assert_resume(thread, coroutine.resume(thread))
 		end
-		--thread yielded back here either because it asked for a read or write or
-		--because it finished execution. finishing implies closing the connection.
-		if not read[skt] and not write[skt] then
-			skt:close()
-		end
 	end
 
 	--call select() and resume the calling threads of the sockets that get loaded.
@@ -149,6 +144,12 @@ local function new(coro)
 	--loop thread on finish, and run it. return it while suspended in the first
 	--socket call. dispatch() will manage it next.
 	function loop.newthread(handler, args)
+		--wrap handler to get full traceback from coroutine
+		local handler = function(args)
+			local ok, err = glue.pcall(handler, args)
+			if ok then return ok end
+			error(err, 2)
+		end
 		if coro then
 			local loop_thread = loop.thread
 			local thread = coro.create(handler, loop_thread)
@@ -157,11 +158,7 @@ local function new(coro)
 			loop.thread = loop_thread
 			return thread
 		else
-			local thread = coroutine.create(function(args)
-				local ok, err = glue.pcall(handler, args)
-				if ok then return ok end
-				error(err, 2)
-			end)
+			local thread = coroutine.create(handler)
 			assert_resume(thread, coroutine.resume(thread, args))
 		end
 	end

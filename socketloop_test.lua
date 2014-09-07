@@ -23,6 +23,7 @@ local function reverse_echo_server(port, coro)
 			linda:set('messages_served', linda:get('messages_served') + 1)
 		end
 		hcount = hcount - 1
+		skt:close()
 	end
 	loop.newserver('localhost', port, handler)
 	print'server started'
@@ -47,6 +48,7 @@ local function client_multi_conn(server_port, coro)
 			say('erogenous zoone #'..tostring(i))
 		end
 		skt:send'close\n'
+		skt:close()
 	end
 	for i=1,5 do
 		loop.newthread(client)
