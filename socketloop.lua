@@ -1,6 +1,6 @@
 
 --luasocket-based scheduler for Lua coroutines.
---Cosmin Apreutesei. Public domain.
+--Written by Cosmin Apreutesei. Public domain.
 
 local socket = require'socket'
 local glue = require'glue'
