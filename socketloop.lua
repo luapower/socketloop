@@ -141,8 +141,8 @@ local function new(coro)
 	end
 
 	--create a coroutine or a coro thread set up to transfer control to the
-	--loop thread on finish, and run it. return it while suspended in the first
-	--socket call. dispatch() will manage it next.
+	--loop thread on finish, and run it. return it while suspended in the
+	--first async socket call. dispatch() will resume it afterwards.
 	function loop.newthread(handler, args)
 		--wrap handler to get full traceback from coroutine
 		local handler = function(args)
