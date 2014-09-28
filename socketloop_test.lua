@@ -27,7 +27,7 @@ local function reverse_echo_server(port, coro)
 	end
 	loop.newserver('localhost', port, handler)
 	print'server started'
-	while loop.dispatch(1) do
+	while loop.step(1) do
 		if stop_loop and hcount == 0 then break end
 	end
 end
