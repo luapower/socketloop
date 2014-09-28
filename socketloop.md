@@ -7,14 +7,19 @@ tagline: TCP sockets with coroutines
 
 A socket loop enables coroutine-based asynchronous I/O programming model for
 [TCP sockets][TCP socket]. The concept is similar to [Copas], the API and the
-implementation are different. Supports both symmetric and asymmetric coroutines.
+implementation are different in that: 1) it supports both symmetric and
+asymmetric coroutines, and 2) connect() is asynchronous too, and 3) it
+provides a mechanism for suspending and resuming threads.
 
 [Copas]: http://keplerproject.github.com/copas/
 
 ----------------------------------------- ----------------------------------------
 `loop.wrap(socket) -> asocket`				wrap a TCP socket to an async socket
 `loop.connect(addr,port) -> asocket`		make an async TCP connection
-`loop.newthread(handler, ...)`				create a thread for one connection
+`loop.newthread(handler, arg)`				create a thread for one connection
+`loop.current() -> thread`						current thread
+`loop.suspend()`									suspend current thread
+`loop.resume(thread, arg)`						resume a suspended thread
 `loop.newserver(host, port, handler)`		dispatch inbound connections to a function
 `loop.start([timeout])`							start the loop
 `loop.stop()`										stop the loop (if started)
@@ -40,9 +45,30 @@ Make a TCP connection and return an async socket.
 
 [TCP socket]: http://w3.impa.br/~diego/software/luasocket/tcp.html
 
-## `loop.newthread(handler, args)`
+## `loop.newthread(handler, arg) -> thread`
 
-Create and resume a coroutine (or coro thread, if it's a coro-based loop).
+Create and resume a thead (either a coroutine or a coro thread).
+The thread is suspended and control returns to the caller as soon as:
+
+  * an async socket method is called,
+  * `loop.suspend()` is called,
+  * the thread finishes.
+
+
+## `loop.current() -> thread`
+
+Return the current thread (either a coroutine or a coro thread).
+
+## `loop.suspend()`
+
+Suspend the current thread. To resume a suspended thread,
+call `loop.resume()` from another thread.
+
+## `loop.resume(thread, arg)`
+
+Resume a previously suspended thread. Only resume threads that were
+previously suspended by calling `loop.suspend()`. Resuming a thread
+that is suspended in an async call is undefined behavior.
 
 ## `loop.newserver(host, port, handler)`
 

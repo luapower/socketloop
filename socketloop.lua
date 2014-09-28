@@ -20,19 +20,59 @@ local function new(coro)
 
 	local read, write = {}, {} --{skt: thread}
 
-	local wait
+	--thread API, based on coro or coroutine module.
+	local newthread, current, suspend, resume
 	if coro then
-		function wait(rwt,skt)
-			rwt[skt] = coro.current
+		function newthread(handler, args)
+			--wrap handler so that it terminates in current loop.thread.
+			local handler = function(args)
+				handler(args)
+				coro.transfer(loop.thread)
+			end
+			local thread = coro.create(handler)
+			loop.resume(thread, args)
+			return thread
+		end
+		function current()
+			return coro.current
+		end
+		function suspend()
 			coro.transfer(loop.thread)
-			rwt[skt] = nil
+		end
+		function resume(thread, args)
+			coro.transfer(thread, args)
+		end
+		function loop.resume(thread, args)
+			local loop_thread = loop.thread
+			--change loop.thread temporarily so that we get back here.
+			loop.thread = coro.current
+			resume(thread, args)
+			loop.thread = loop_thread
 		end
 	else
-		function wait(rwt,skt)
-			rwt[skt] = coroutine.running()
-			coroutine.yield()
-			rwt[skt] = nil
+		function newthread(handler, args)
+			local thread = coroutine.create(handler)
+			resume(thread, args)
+			return thread
 		end
+		function current()
+			return coroutine.running()
+		end
+		function suspend()
+			coroutine.yield()
+		end
+		function resume(thread, args)
+			assert_resume(thread, coroutine.resume(thread, args))
+		end
+		loop.resume = resume
+	end
+	loop.current = current
+	loop.suspend = suspend
+
+	local function wait(rwt,skt)
+		rwt[skt] = current()
+		suspend()
+		rwt[skt] = nil
 	end
 
 	local function accept(skt,...)
@@ -112,11 +152,7 @@ local function new(coro)
 	local function wake(skt,rwt)
 		local thread = rwt[skt]
 		if not thread then return end
-		if coro then
-			coro.transfer(thread)
-		else
-			assert_resume(thread, coroutine.resume(thread))
-		end
+		resume(thread)
 	end
 
 	--call select() and resume the calling threads of the sockets that get loaded.
@@ -124,9 +160,7 @@ local function new(coro)
 		if not next(read) and not next(write) then return end
 		local reads, writes, err = glue.keys(read), glue.keys(write)
 		reads, writes, err = socket.select(reads, writes, timeout)
-		if coro then
-			loop.thread = coro.current
-		end
+		loop.thread = current()
 		for i=1,#reads do wake(reads[i], read) end
 		for i=1,#writes do wake(writes[i], write) end
 		return true
@@ -150,17 +184,7 @@ local function new(coro)
 			if ok then return ok end
 			error(err, 2)
 		end
-		if coro then
-			local loop_thread = loop.thread
-			local thread = coro.create(handler, loop_thread)
-			loop.thread = coro.current
-			coro.transfer(thread, args)
-			loop.thread = loop_thread
-			return thread
-		else
-			local thread = coroutine.create(handler)
-			assert_resume(thread, coroutine.resume(thread, args))
-		end
+		return newthread(handler, args)
 	end
 
 	function loop.newserver(host, port, handler)
