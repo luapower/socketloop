@@ -156,7 +156,7 @@ local function new(coro)
 	end
 
 	--call select() and resume the calling threads of the sockets that get loaded.
-	function loop.dispatch(timeout)
+	function loop.step(timeout)
 		if not next(read) and not next(write) then return end
 		local reads, writes, err = glue.keys(read), glue.keys(write)
 		reads, writes, err = socket.select(reads, writes, timeout)
@@ -169,14 +169,14 @@ local function new(coro)
 	local stop = false
 	function loop.stop() stop = true end
 	function loop.start(timeout)
-		while loop.dispatch(timeout) do
+		while loop.step(timeout) do
 			if stop then break end
 		end
 	end
 
 	--create a coroutine or a coro thread set up to transfer control to the
 	--loop thread on finish, and run it. return it while suspended in the
-	--first async socket call. dispatch() will resume it afterwards.
+	--first async socket call. step() will resume it afterwards.
 	function loop.newthread(handler, args)
 		--wrap handler to get full traceback from coroutine
 		local handler = function(args)

@@ -7,9 +7,8 @@ tagline: TCP sockets with coroutines
 
 A socket loop enables coroutine-based asynchronous I/O programming model for
 [TCP sockets][TCP socket]. The concept is similar to [Copas], the API and the
-implementation are different in that: 1) it supports both symmetric and
-asymmetric coroutines, and 2) connect() is asynchronous too, and 3) it
-provides a mechanism for suspending and resuming threads.
+implementation are different. Supports both symmetric and asymmetric
+coroutines.
 
 [Copas]: http://keplerproject.github.com/copas/
 
@@ -23,7 +22,7 @@ provides a mechanism for suspending and resuming threads.
 `loop.newserver(host, port, handler)`		dispatch inbound connections to a function
 `loop.start([timeout])`							start the loop
 `loop.stop()`										stop the loop (if started)
-`loop.dispatch([timeout]) -> true|false`	dispatch pending reads and writes
+`loop.step([timeout]) -> true|false`		dispatch pending reads and writes
 `loop.coro -> loop`								[coro]-based loop
 ----------------------------------------- ----------------------------------------
 
@@ -85,9 +84,9 @@ an async socket call.
 
 Stop the dispatch loop (if started).
 
-## `loop.dispatch([timeout]) -> true|false`
+## `loop.step([timeout]) -> true|false`
 
-Dispatch currently pending reads and writes to their respective coroutines.
+Dispatch currently pending reads and writes to their respective threads.
 
 ## `loop = require'socketloop'.coro`
 
