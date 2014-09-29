@@ -5,6 +5,8 @@
 local socket = require'socket'
 local glue = require'glue'
 
+local timeout_delta = 0.001 --1ms
+
 --assert the result of coroutine.resume(). on error, raise an error with the
 --traceback of the not-yet unwound stack.
 local function assert_resume(thread, ok, ...)
@@ -69,12 +71,20 @@ local function new(coro)
 	loop.current = current
 	loop.suspend = suspend
 
+	--internal suspend/resume API
 	local function wait(rwt,skt)
 		rwt[skt] = current()
 		suspend()
 		rwt[skt] = nil
 	end
 
+	local function wake(skt,rwt)
+		local thread = rwt[skt]
+		if not thread then return end
+		resume(thread)
+	end
+
+	--async socket API
 	local function accept(skt,...)
 		wait(read,skt)
 		return assert(skt:accept(...))
@@ -147,12 +157,6 @@ local function new(coro)
 		end
 		skt = loop.wrap(skt)
 		return skt:connect(address, port)
-	end
-
-	local function wake(skt,rwt)
-		local thread = rwt[skt]
-		if not thread then return end
-		resume(thread)
 	end
 
 	--call select() and resume the calling threads of the sockets that get loaded.

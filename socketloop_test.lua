@@ -38,6 +38,11 @@ local function client_multi_conn(server_port, coro)
 	local function client()
 		local skt = assert(loop.connect('localhost', server_port))
 		local function say(s)
+
+			print'sleeping 1'
+			loop.sleep(1)
+			print'slept'
+
 			assert(skt:send(s .. '\n'))
 			local ss = assert(skt:receive'*l')
 			assert(ss == s:reverse())
