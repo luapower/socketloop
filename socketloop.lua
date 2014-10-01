@@ -5,8 +5,6 @@
 local socket = require'socket'
 local glue = require'glue'
 
-local timeout_delta = 0.001 --1ms
-
 --assert the result of coroutine.resume(). on error, raise an error with the
 --traceback of the not-yet unwound stack.
 local function assert_resume(thread, ok, ...)
