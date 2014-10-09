@@ -37,7 +37,7 @@ local function new(coro)
 			return coro.current
 		end
 		function suspend()
-			coro.transfer(loop.thread)
+			return coro.transfer(loop.thread)
 		end
 		function resume(thread, args)
 			coro.transfer(thread, args)
@@ -59,7 +59,7 @@ local function new(coro)
 			return coroutine.running()
 		end
 		function suspend()
-			coroutine.yield()
+			return coroutine.yield()
 		end
 		function resume(thread, args)
 			assert_resume(thread, coroutine.resume(thread, args))
@@ -176,9 +176,9 @@ local function new(coro)
 		end
 	end
 
-	--create a coroutine or a coro thread set up to transfer control to the
-	--loop thread on finish, and run it. return it while suspended in the
-	--first async socket call. step() will resume it afterwards.
+	--create a thread set up to transfer control to the loop thread on finish,
+	--and run it. return it while suspended in the first async socket call.
+	--step() will resume it afterwards.
 	function loop.newthread(handler, args)
 		--wrap handler to get full traceback from coroutine
 		local handler = function(args)
