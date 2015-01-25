@@ -12,19 +12,19 @@ coroutines.
 
 [Copas]: http://keplerproject.github.com/copas/
 
------------------------------------------ ----------------------------------------
-`loop.wrap(socket) -> asocket`				wrap a TCP socket to an async socket
-`loop.connect(addr,port) -> asocket`		make an async TCP connection
-`loop.newthread(handler, arg)`				create a thread for one connection
-`loop.current() -> thread`						current thread
-`loop.suspend()`									suspend current thread
-`loop.resume(thread, arg)`						resume a suspended thread
-`loop.newserver(host, port, handler)`		dispatch inbound connections to a function
-`loop.start([timeout])`							start the loop
-`loop.stop()`										stop the loop (if started)
-`loop.step([timeout]) -> true|false`		dispatch pending reads and writes
-`loop.coro -> loop`								[coro]-based loop
------------------------------------------ ----------------------------------------
+-------------------------------------------- ----------------------------------------
+`loop.wrap(socket) -> asocket`					wrap a TCP socket to an async socket
+`loop.connect(ip, port) -> asocket`				make an async TCP connection
+`loop.newthread(handler, arg)`					create a thread for one connection
+`loop.current() -> thread`							current thread
+`loop.suspend()`										suspend current thread
+`loop.resume(thread, arg)`							resume a suspended thread
+`loop.newserver(ip, port, handler) -> skt`	dispatch inbound connections to a function
+`loop.start([timeout])`								start the loop
+`loop.stop()`											stop the loop (if started)
+`loop.step([timeout]) -> true|false`			dispatch pending reads and writes
+`loop.coro -> loop`									[coro]-based loop
+-------------------------------------------- ----------------------------------------
 
 ## `loop.wrap(socket) -> asocket`
 
@@ -38,7 +38,7 @@ as long as the loop is doing the dispatching. The asynchronous methods are:
 
 An async socket should only be used inside a loop thread.
 
-## `loop.connect(address, port [,local_address] [,local_port]) -> asocket`
+## `loop.connect(ip, port [,local_ip] [,local_port]) -> asocket`
 
 Make a TCP connection and return an async socket.
 
@@ -69,7 +69,7 @@ Resume a previously suspended thread. Only resume threads that were
 previously suspended by calling `loop.suspend()`. Resuming a thread
 that is suspended in an async call is undefined behavior.
 
-## `loop.newserver(host, port, handler)`
+## `loop.newserver(ip, port, handler)`
 
 Create a TCP socket and start accepting connections on it, and call
 `handler(client_skt)` on a separate coroutine for each accepted connection.

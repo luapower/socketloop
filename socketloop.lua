@@ -189,10 +189,10 @@ local function new(coro)
 		return newthread(handler, args)
 	end
 
-	function loop.newserver(host, port, handler, accept)
+	function loop.newserver(ip, port, handler, accept)
 		local server_skt = socket.tcp()
 		server_skt:settimeout(0)
-		assert(server_skt:bind(host, port))
+		assert(server_skt:bind(ip or '*', port or 0))
 		assert(server_skt:listen(16384))
 		server_skt = loop.wrap(server_skt)
 		accept = accept or function() return true end
@@ -207,6 +207,7 @@ local function new(coro)
 		else
 			loop.newthread(server)
 		end
+		return server_skt
 	end
 
 	return loop
