@@ -55,12 +55,8 @@ local function new(coro)
 			resume(thread, args)
 			return thread
 		end
-		function current()
-			return coroutine.running()
-		end
-		function suspend()
-			return coroutine.yield()
-		end
+		current = coroutine.running
+		suspend = coroutine.yield
 		function resume(thread, args)
 			assert_resume(thread, coroutine.resume(thread, args))
 		end
@@ -110,6 +106,7 @@ local function new(coro)
 	end
 
 	local function connect(skt, ...)
+		assert(coroutine.running(), 'attempting to connect from the main thread')
 		assert(skt:settimeout(0,'b'))
 		assert(skt:settimeout(0,'t'))
 		local res, err = skt:connect(...)
