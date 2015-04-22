@@ -12,6 +12,8 @@ coroutines.
 
 [Copas]: http://keplerproject.github.com/copas/
 
+## API
+
 -------------------------------------------- ----------------------------------------
 `loop.wrap(socket) -> asocket`					wrap a TCP socket to an async socket
 `loop.connect(ip, port) -> asocket`				make an async TCP connection
@@ -26,7 +28,7 @@ coroutines.
 `loop.coro -> loop`									[coro]-based loop
 -------------------------------------------- ----------------------------------------
 
-## `loop.wrap(socket) -> asocket`
+### `loop.wrap(socket) -> asocket`
 
 Wrap a [TCP socket] into an asynchronous socket with the same API
 as the original, which btw is kept as `asocket.socket`.
@@ -38,13 +40,13 @@ as long as the loop is doing the dispatching. The asynchronous methods are:
 
 An async socket should only be used inside a loop thread.
 
-## `loop.connect(ip, port [,local_ip] [,local_port]) -> asocket`
+### `loop.connect(ip, port [,local_ip] [,local_port]) -> asocket`
 
 Make a TCP connection and return an async socket.
 
 [TCP socket]: http://w3.impa.br/~diego/software/luasocket/tcp.html
 
-## `loop.newthread(handler, arg) -> thread`
+### `loop.newthread(handler, arg) -> thread`
 
 Create and resume a thead (either a coroutine or a coro thread).
 The thread is suspended and control returns to the caller as soon as:
@@ -54,41 +56,41 @@ The thread is suspended and control returns to the caller as soon as:
   * the thread finishes.
 
 
-## `loop.current() -> thread`
+### `loop.current() -> thread`
 
 Return the current thread (either a coroutine or a coro thread).
 
-## `loop.suspend()`
+### `loop.suspend()`
 
 Suspend the current thread. To resume a suspended thread,
 call `loop.resume()` from another thread.
 
-## `loop.resume(thread, arg)`
+### `loop.resume(thread, arg)`
 
 Resume a previously suspended thread. Only resume threads that were
 previously suspended by calling `loop.suspend()`. Resuming a thread
 that is suspended in an async call is undefined behavior.
 
-## `loop.newserver(ip, port, handler)`
+### `loop.newserver(ip, port, handler)`
 
 Create a TCP socket and start accepting connections on it, and call
 `handler(client_skt)` on a separate coroutine for each accepted connection.
 
-## `loop.start([timeout])`
+### `loop.start([timeout])`
 
 Start dispatching reads and writes continuously in a loop.
 The loop should be started only if there's at least one thread suspended in
 an async socket call.
 
-## `loop.stop()`
+### `loop.stop()`
 
 Stop the dispatch loop (if started).
 
-## `loop.step([timeout]) -> true|false`
+### `loop.step([timeout]) -> true|false`
 
 Dispatch currently pending reads and writes to their respective threads.
 
-## `loop = require'socketloop'.coro`
+### `loop = require'socketloop'.coro`
 
 An alternative loop that dispatches to [symmetric coroutines][coro] instead
 of Lua coroutines.
