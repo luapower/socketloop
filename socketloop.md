@@ -1,5 +1,4 @@
 ---
-project: socketloop
 tagline: TCP sockets with coroutines
 ---
 
