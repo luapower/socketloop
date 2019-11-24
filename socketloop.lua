@@ -84,11 +84,18 @@ local function new(coro)
 
 	local function receive(skt, patt, prefix)
 		wait(read, skt)
-		local s, err, partial = skt:receive(patt, prefix)
-		if not s and err == 'wantread' then
-			return receive(skt, patt, partial)
-		else
-			return s, err, partial
+		while true do
+			local s, err, partial = skt:receive(patt, prefix)
+			--print(s and #s, err, partial and partial)
+			if not s and (err == 'wantread' or err == 'wantwrite') then
+				if partial and #partial > 0 and err == 'wantread' then
+					return partial
+				end
+				wait(err == 'wantread' and read or write, skt)
+				prefix = partial
+			else
+				return s, err, partial
+			end
 		end
 	end
 
@@ -185,7 +192,7 @@ local function new(coro)
 		return setmetatable(o, o)
 	end
 
-	function loop.create_connection(locaddr, locport)
+	function loop.tcp(locaddr, locport)
 		local skt = socket.try(socket.tcp())
 		if locaddr or locport then
 			assert(skt:bind(locaddr, locport or 0))
@@ -194,7 +201,7 @@ local function new(coro)
 	end
 
 	function loop.connect(host, port, locaddr, locport)
-		local skt = loop.create_connection(locaddr)
+		local skt = loop.tcp(locaddr)
 		local ok, err = skt:connect(host, port)
 		if ok then return skt else return nil, err end
 	end
