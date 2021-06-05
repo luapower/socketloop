@@ -107,7 +107,7 @@ of Lua coroutines.
 
 ## Example
 
-~~~{.lua}
+```lua
 local loop = require'socketloop'
 local http = require'socket.http'
 
@@ -130,7 +130,7 @@ loop.newthread(function()
 end)
 
 loop.start()
-~~~
+```
 
 ### `asocket:call_async(func, ...) -> ret, err`
 

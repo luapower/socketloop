@@ -98,6 +98,8 @@ local function new(coro)
 					if err == 'timeout' then err = 'wantread' end
 					wait(err == 'wantread' and read or write, skt)
 					prefix = partial
+				else
+					return s, err, partial
 				end
 			else
 				return s, err, partial
